@@ -1,0 +1,456 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Huffman Compression Tool</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+        max-width: 900px;
+        width: 100%;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 32px;
+      }
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 40px;
+        font-size: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin-bottom: 30px;
+      }
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: 1fr;
+          gap: 30px;
+        }
+      }
+      .card {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 30px;
+        transition: all 0.3s ease;
+      }
+      .card:hover {
+        border-color: #667eea;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+      }
+      .card h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 20px;
+      }
+      .drop-zone {
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f8f9ff;
+      }
+      .drop-zone:hover,
+      .drop-zone.drag-over {
+        background: #f0f2ff;
+        border-color: #764ba2;
+      }
+      .drop-zone p {
+        color: #666;
+        margin-bottom: 10px;
+      }
+      .drop-zone-text-main {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 5px;
+      }
+      .drop-zone-text-sub {
+        font-size: 12px;
+        color: #999;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .file-info {
+        margin-top: 15px;
+        padding: 12px;
+        background: #f5f5f5;
+        border-radius: 6px;
+        display: none;
+        font-size: 13px;
+        color: #555;
+      }
+      .file-info.show {
+        display: block;
+      }
+      .file-info div {
+        margin: 5px 0;
+      }
+      .file-name {
+        font-weight: 500;
+        color: #333;
+        word-break: break-all;
+      }
+      .file-size {
+        color: #666;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .loading {
+        display: none;
+        text-align: center;
+        margin-top: 15px;
+      }
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .status {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 6px;
+        display: none;
+        font-size: 14px;
+      }
+      .status.show {
+        display: block;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .stats {
+        background: #f0f2ff;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 20px;
+        display: none;
+        font-size: 13px;
+      }
+      .stats.show {
+        display: block;
+      }
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0;
+      }
+      .stat-label {
+        color: #666;
+      }
+      .stat-value {
+        font-weight: 500;
+        color: #333;
+      }
+      .info-box {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        color: #856404;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-top: 15px;
+        display: none;
+      }
+      .info-box.show {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🗜️ Huffman Compression</h1>
+      <p class="subtitle">Compress and decompress your files using Huffman coding algorithm</p>
+
+      <div class="grid">
+        <!-- Compress Card -->
+        <div class="card">
+          <h2>Compress</h2>
+          <form id="compressForm" action="/compress" method="post" enctype="multipart/form-data">
+            <div class="drop-zone" id="dropZoneCompress">
+              <p class="drop-zone-text-main">📁 Drop your file here</p>
+              <p class="drop-zone-text-sub">or click to browse</p>
+              <input type="file" name="file" id="fileInputCompress" />
+            </div>
+            <div class="file-info" id="fileInfoCompress">
+              <div class="file-name" id="fileNameCompress"></div>
+              <div class="file-size" id="fileSizeCompress"></div>
+            </div>
+            <button type="submit" id="compressBtn">Compress File</button>
+            <div class="loading" id="compressLoading">
+              <div class="spinner"></div>
+              <p style="margin-top: 10px; color: #666;">Compressing...</p>
+            </div>
+            <div class="status" id="compressStatus"></div>
+            <div class="stats" id="compressStats">
+              <div class="stat-row">
+                <span class="stat-label">Original Size:</span>
+                <span class="stat-value" id="originalSize">-</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Compressed Size:</span>
+                <span class="stat-value" id="compressedSize">-</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Compression Ratio:</span>
+                <span class="stat-value" id="compressionRatio">-</span>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Decompress Card -->
+        <div class="card">
+          <h2>Decompress</h2>
+          <form id="decompressForm" action="/decompress" method="post" enctype="multipart/form-data">
+            <div class="drop-zone" id="dropZoneDecompress">
+              <p class="drop-zone-text-main">📁 Drop your file here</p>
+              <p class="drop-zone-text-sub">or click to browse</p>
+              <input type="file" name="file" id="fileInputDecompress" />
+            </div>
+            <div class="file-info" id="fileInfoDecompress">
+              <div class="file-name" id="fileNameDecompress"></div>
+              <div class="file-size" id="fileSizeDecompress"></div>
+            </div>
+            <button type="submit" id="decompressBtn">Decompress File</button>
+            <div class="loading" id="decompressLoading">
+              <div class="spinner"></div>
+              <p style="margin-top: 10px; color: #666;">Decompressing...</p>
+            </div>
+            <div class="status" id="decompressStatus"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="info-box" id="infoBox">
+        ℹ️ <strong>Tip:</strong> Compress text files for best results. Already compressed files (ZIP, JPG, PNG) won't compress much.
+      </div>
+    </div>
+
+    <script>
+      // Utility function to format bytes
+      function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+      }
+
+      // Setup drag-and-drop and file handling for compress
+      const dropZoneCompress = document.getElementById('dropZoneCompress');
+      const fileInputCompress = document.getElementById('fileInputCompress');
+      const compressForm = document.getElementById('compressForm');
+      const compressBtn = document.getElementById('compressBtn');
+
+      dropZoneCompress.addEventListener('click', () => fileInputCompress.click());
+      dropZoneCompress.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZoneCompress.classList.add('drag-over');
+      });
+      dropZoneCompress.addEventListener('dragleave', () => {
+        dropZoneCompress.classList.remove('drag-over');
+      });
+      dropZoneCompress.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZoneCompress.classList.remove('drag-over');
+        fileInputCompress.files = e.dataTransfer.files;
+        updateFileInfo('compress');
+      });
+
+      fileInputCompress.addEventListener('change', () => updateFileInfo('compress'));
+
+      function updateFileInfo(type) {
+        const fileInput = type === 'compress' ? fileInputCompress : fileInputDecompress;
+        const fileInfo = type === 'compress' ? document.getElementById('fileInfoCompress') : document.getElementById('fileInfoDecompress');
+        const fileName = type === 'compress' ? document.getElementById('fileNameCompress') : document.getElementById('fileNameDecompress');
+        const fileSize = type === 'compress' ? document.getElementById('fileSizeCompress') : document.getElementById('fileSizeDecompress');
+
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          fileName.textContent = file.name;
+          fileSize.textContent = formatBytes(file.size);
+          fileInfo.classList.add('show');
+        } else {
+          fileInfo.classList.remove('show');
+        }
+      }
+
+      // Setup drag-and-drop and file handling for decompress
+      const dropZoneDecompress = document.getElementById('dropZoneDecompress');
+      const fileInputDecompress = document.getElementById('fileInputDecompress');
+      const decompressForm = document.getElementById('decompressForm');
+
+      dropZoneDecompress.addEventListener('click', () => fileInputDecompress.click());
+      dropZoneDecompress.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZoneDecompress.classList.add('drag-over');
+      });
+      dropZoneDecompress.addEventListener('dragleave', () => {
+        dropZoneDecompress.classList.remove('drag-over');
+      });
+      dropZoneDecompress.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZoneDecompress.classList.remove('drag-over');
+        fileInputDecompress.files = e.dataTransfer.files;
+        updateFileInfo('decompress');
+      });
+
+      fileInputDecompress.addEventListener('change', () => updateFileInfo('decompress'));
+
+      // Handle compress form submission
+      compressForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (fileInputCompress.files.length === 0) {
+          showStatus('compress', 'Please select a file', 'error');
+          return;
+        }
+        const file = fileInputCompress.files[0];
+        const formData = new FormData(compressForm);
+        document.getElementById('compressLoading').style.display = 'block';
+        document.getElementById('compressStats').classList.remove('show');
+        compressBtn.disabled = true;
+
+        try {
+          const response = await fetch('/compress', {
+            method: 'POST',
+            body: formData
+          });
+          if (response.ok) {
+            const blob = await response.blob();
+            downloadFile(blob, 'compressed.huff');
+            showStatus('compress', '✓ File compressed successfully!', 'success');
+            document.getElementById('originalSize').textContent = formatBytes(file.size);
+            document.getElementById('compressedSize').textContent = formatBytes(blob.size);
+            const ratio = ((1 - blob.size / file.size) * 100).toFixed(2);
+            document.getElementById('compressionRatio').textContent = ratio + '%';
+            document.getElementById('compressStats').classList.add('show');
+            document.getElementById('infoBox').classList.add('show');
+          } else {
+            showStatus('compress', 'Error compressing file', 'error');
+          }
+        } catch (error) {
+          showStatus('compress', 'Error: ' + error.message, 'error');
+        } finally {
+          document.getElementById('compressLoading').style.display = 'none';
+          compressBtn.disabled = false;
+        }
+      });
+
+      // Handle decompress form submission
+      decompressForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (fileInputDecompress.files.length === 0) {
+          showStatus('decompress', 'Please select a file', 'error');
+          return;
+        }
+        const formData = new FormData(decompressForm);
+        document.getElementById('decompressLoading').style.display = 'block';
+        document.getElementById('decompressBtn').disabled = true;
+
+        try {
+          const response = await fetch('/decompress', {
+            method: 'POST',
+            body: formData
+          });
+          if (response.ok) {
+            const blob = await response.blob();
+            downloadFile(blob, 'decoded.txt');
+            showStatus('decompress', '✓ File decompressed successfully!', 'success');
+          } else {
+            showStatus('decompress', 'Error decompressing file', 'error');
+          }
+        } catch (error) {
+          showStatus('decompress', 'Error: ' + error.message, 'error');
+        } finally {
+          document.getElementById('decompressLoading').style.display = 'none';
+          document.getElementById('decompressBtn').disabled = false;
+        }
+      });
+
+      function downloadFile(blob, filename) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+
+      function showStatus(type, message, statusType) {
+        const statusEl = type === 'compress' ? document.getElementById('compressStatus') : document.getElementById('decompressStatus');
+        statusEl.textContent = message;
+        statusEl.classList.add('show');
+        statusEl.classList.remove('success', 'error');
+        statusEl.classList.add(statusType);
+        if (statusType === 'success') {
+          setTimeout(() => statusEl.classList.remove('show'), 5000);
+        }
+      }
+    </script>
+  </body>
+</html>

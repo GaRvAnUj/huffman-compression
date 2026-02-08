@@ -1,0 +1,2 @@
+the quick brown fox jumps over the lazy dog. this is a sample text file for huffman coding compression. huffman coding is a lossless data compression algorithm that uses variable-length codes for different characters based on their frequencies of occurrence.
+
